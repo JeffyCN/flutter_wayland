@@ -238,6 +238,8 @@ WaylandDisplay::WaylandDisplay(size_t width,
       cur_y = y;
       event.x = x;
       event.y = y;
+      event.device = id;
+      event.device_kind = kFlutterPointerDeviceKindTouch;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -252,6 +254,8 @@ WaylandDisplay::WaylandDisplay(size_t width,
       TouchPhase = event.phase;
       event.x = cur_x;
       event.y = cur_y;
+      event.device = id;
+      event.device_kind = kFlutterPointerDeviceKindTouch;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -268,6 +272,8 @@ WaylandDisplay::WaylandDisplay(size_t width,
       event.phase = (TouchPhase == kUp) ? kHover : kMove;
       event.x = cur_x;
       event.y = cur_y;
+      event.device = id;
+      event.device_kind = kFlutterPointerDeviceKindTouch;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -288,6 +294,7 @@ WaylandDisplay::WaylandDisplay(size_t width,
       event.phase = kAdd;
       event.x = surface_x;
       event.y = surface_y;
+      event.device_kind = kFlutterPointerDeviceKindMouse;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -299,6 +306,7 @@ WaylandDisplay::WaylandDisplay(size_t width,
       FlutterPointerEvent event = {};
       event.struct_size = sizeof(event);
       event.phase = kRemove;
+      event.device_kind = kFlutterPointerDeviceKindMouse;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -317,6 +325,7 @@ WaylandDisplay::WaylandDisplay(size_t width,
       event.phase = (PointerPhase == kUp) ? kHover : kMove;
       event.x = surface_x;
       event.y = surface_y;
+      event.device_kind = kFlutterPointerDeviceKindMouse;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
@@ -343,6 +352,7 @@ WaylandDisplay::WaylandDisplay(size_t width,
       }
       event.x = cur_x;
       event.y = cur_y;
+      event.device_kind = kFlutterPointerDeviceKindMouse;
       event.timestamp =
           std::chrono::duration_cast<std::chrono::microseconds>(
               std::chrono::high_resolution_clock::now().time_since_epoch())
