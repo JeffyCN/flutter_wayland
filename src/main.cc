@@ -58,8 +58,13 @@ static bool Main(std::vector<std::string> args) {
     return false;
   }
 
-  const size_t kWidth = 640;
-  const size_t kHeight = 480;
+  size_t kWidth = 640;
+  size_t kHeight = 480;
+
+  if (getenv("FLUTTER_WAYLAND_FULLSCREEN")) {
+    kWidth = 0;
+    kHeight = 0;
+  }
 
   for (const auto& arg : args) {
     FLWAY_LOG << "Arg: " << arg << std::endl;
@@ -75,11 +80,6 @@ static bool Main(std::vector<std::string> args) {
   display.InitializeApplication(assets_path, args);
   if (!display.IsValid()) {
     FLWAY_ERROR << "Flutter application was not valid." << std::endl;
-    return false;
-  }
-
-  if (!display.SetWindowSize(kWidth, kHeight)) {
-    FLWAY_ERROR << "Could not update Flutter application size." << std::endl;
     return false;
   }
 

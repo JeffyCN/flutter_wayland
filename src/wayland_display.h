@@ -40,8 +40,6 @@ class WaylandDisplay {
   void InitializeApplication(std::string assets_path,
                              const std::vector<std::string>& args);
 
-  bool SetWindowSize(size_t width, size_t height);
-
   bool Run();
 
  private:
@@ -76,8 +74,8 @@ class WaylandDisplay {
   bool has_touch;
 
   bool valid_ = false;
-  const int screen_width_;
-  const int screen_height_;
+  int screen_width_;
+  int screen_height_;
   int32_t cur_x;
   int32_t cur_y;
 
@@ -86,6 +84,8 @@ class WaylandDisplay {
   void* aot_handle = nullptr;
   bool load_aot = false;
   int last_button_ = 0;
+
+  bool SetWindowSize();
 
   void init_egl();
 

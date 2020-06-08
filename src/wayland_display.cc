@@ -157,11 +157,11 @@ bool WaylandDisplay::IsValid() const {
   return valid_;
 }
 
-bool WaylandDisplay::SetWindowSize(size_t width, size_t height) {
+bool WaylandDisplay::SetWindowSize() {
   FlutterWindowMetricsEvent event = {};
   event.struct_size = sizeof(event);
-  event.width = width;
-  event.height = height;
+  event.width = screen_width_;
+  event.height = screen_height_;
   event.pixel_ratio = 1.0;
   return FlutterEngineSendWindowMetricsEvent(engine_, &event) == kSuccess;
 }
@@ -170,11 +170,6 @@ WaylandDisplay::WaylandDisplay(size_t width,
                                size_t height,
                                const std::vector<std::string>& args)
     : screen_width_(width), screen_height_(height) {
-  if (screen_width_ == 0 || screen_height_ == 0) {
-    FLWAY_ERROR << "Invalid screen dimensions." << std::endl;
-    return;
-  }
-
   // retrieve global objects
   registry = display.get_registry();
   registry.on_global() = [&](uint32_t name, std::string interface,
@@ -202,7 +197,7 @@ WaylandDisplay::WaylandDisplay(size_t width,
   surface = compositor.create_surface();
 
   // create a shell surface
-  if (xdg_wm_base) {
+  if (screen_width_ && screen_height_ && xdg_wm_base) {
     xdg_wm_base.on_ping() = [&](uint32_t serial) { xdg_wm_base.pong(serial); };
     xdg_surface = xdg_wm_base.get_xdg_surface(surface);
     xdg_surface.on_configure() = [&](uint32_t serial) {
@@ -212,12 +207,28 @@ WaylandDisplay::WaylandDisplay(size_t width,
     xdg_toplevel.set_title("Window");
     xdg_toplevel.on_close() = [&]() { running = false; };
   } else {
+    bool need_configure = !screen_width_ || !screen_height_;
+
     shell_surface = shell.get_shell_surface(surface);
     shell_surface.on_ping() = [&](uint32_t serial) {
       shell_surface.pong(serial);
     };
     shell_surface.set_title("Flutter");
-    shell_surface.set_toplevel();
+
+    shell_surface.on_configure() = [&](shell_surface_resize edges, int32_t width, int32_t height) {
+      screen_width_ = width;
+      screen_height_ = height;
+      need_configure = false;
+    };
+
+    if (!need_configure)
+      shell_surface.set_toplevel();
+    else
+      shell_surface.set_fullscreen(shell_surface_fullscreen_method::scale,
+                                   0, NULL);
+
+    while (need_configure)
+      display.roundtrip();
   }
   surface.commit();
 
@@ -468,6 +479,11 @@ void WaylandDisplay::init_egl() {
 bool WaylandDisplay::Run() {
   if (!valid_) {
     FLWAY_ERROR << "Could not run an invalid display." << std::endl;
+    return false;
+  }
+
+  if (!SetWindowSize()) {
+    FLWAY_ERROR << "Could not update Flutter application size." << std::endl;
     return false;
   }
 
