@@ -16,6 +16,9 @@
 #include <thread>
 #include <vector>
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
 #include "constants.h"
 #include "utils.h"
 
@@ -387,10 +390,23 @@ WaylandDisplay::~WaylandDisplay() noexcept(false) {
 }
 
 void WaylandDisplay::init_egl() {
-  if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE)
-    throw std::runtime_error("eglBindAPI");
+	static PFNEGLGETPLATFORMDISPLAYEXTPROC get_platform_display = NULL;
 
-  egldisplay = eglGetDisplay(display);
+  if (eglBindAPI(EGL_OPENGL_API) == EGL_FALSE)
+    if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE)
+      throw std::runtime_error("eglBindAPI");
+
+	if (!get_platform_display)
+		get_platform_display = (PFNEGLGETPLATFORMDISPLAYEXTPROC)
+			eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+	if (get_platform_display)
+    egldisplay = get_platform_display(EGL_PLATFORM_WAYLAND_KHR,
+                                      (EGLNativeDisplayType)display, NULL);
+
+  if (egldisplay == EGL_NO_DISPLAY)
+    egldisplay = eglGetDisplay(display);
+
   if (egldisplay == EGL_NO_DISPLAY)
     throw std::runtime_error("No EGL Display..");
 
